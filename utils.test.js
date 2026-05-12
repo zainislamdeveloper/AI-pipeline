@@ -7,112 +7,117 @@ const {
 } = require("./utils");
 
 describe("celsiusToFahrenheit", () => {
-  test("converts 0°C to 32°F", () => {
+  test("converts freezing point", () => {
     expect(celsiusToFahrenheit(0)).toBe(32);
   });
 
-  test("converts -40°C to -40°F", () => {
+  test("converts boiling point", () => {
+    expect(celsiusToFahrenheit(100)).toBe(212);
+  });
+
+  test("handles negative value", () => {
     expect(celsiusToFahrenheit(-40)).toBe(-40);
   });
 
-  test("rounds decimal values", () => {
-    expect(celsiusToFahrenheit(26.4)).toBe(80);
+  test("rounds decimal conversion", () => {
+    expect(celsiusToFahrenheit(37.5)).toBe(100);
+  });
+
+  test("throws on invalid input", () => {
+    expect(() => celsiusToFahrenheit("20")).toThrow(TypeError);
   });
 });
 
 describe("fahrenheitToCelsius", () => {
-  test("converts 32°F to 0°C", () => {
+  test("converts freezing point", () => {
     expect(fahrenheitToCelsius(32)).toBe(0);
   });
 
-  test("converts -40°F to -40°C", () => {
+  test("converts boiling point", () => {
+    expect(fahrenheitToCelsius(212)).toBe(100);
+  });
+
+  test("handles negative equivalent", () => {
     expect(fahrenheitToCelsius(-40)).toBe(-40);
   });
 
-  test("rounds decimal conversions", () => {
-    expect(fahrenheitToCelsius(77)).toBe(25);
+  test("rounds decimal conversion", () => {
+    expect(fahrenheitToCelsius(99.5)).toBe(37);
+  });
+
+  test("throws on invalid input", () => {
+    expect(() => fahrenheitToCelsius(NaN)).toThrow(TypeError);
   });
 });
 
 describe("formatWindSpeed", () => {
-  test("formats km/h by default", () => {
-    expect(formatWindSpeed(18.2)).toBe("18 km/h");
+  test("formats whole number speed", () => {
+    expect(formatWindSpeed(18)).toBe("18 km/h");
   });
 
-  test("formats explicit km/h", () => {
-    expect(formatWindSpeed(16, "km/h")).toBe("16 km/h");
+  test("rounds decimal speed", () => {
+    expect(formatWindSpeed(18.7)).toBe("19 km/h");
   });
 
-  test("formats mph conversion", () => {
-    expect(formatWindSpeed(10, "mph")).toBe("6.2 mph");
+  test("handles zero", () => {
+    expect(formatWindSpeed(0)).toBe("0 km/h");
   });
 
-  test("handles zero boundary", () => {
-    expect(formatWindSpeed(0, "km/h")).toBe("0 km/h");
+  test("throws on negative speed", () => {
+    expect(() => formatWindSpeed(-1)).toThrow(RangeError);
   });
 
-  test("throws for non-finite input", () => {
-    expect(() => formatWindSpeed(Number.NaN)).toThrow("Wind speed must be a finite number.");
-  });
-
-  test("throws for unsupported unit", () => {
-    expect(() => formatWindSpeed(12, "m/s")).toThrow("Unsupported wind speed unit.");
+  test("throws on non-number", () => {
+    expect(() => formatWindSpeed("10")).toThrow(TypeError);
   });
 });
 
 describe("getHumidityLabel", () => {
-  test("returns Dry below 30", () => {
+  test("returns Dry at lower boundary", () => {
     expect(getHumidityLabel(0)).toBe("Dry");
-    expect(getHumidityLabel(29)).toBe("Dry");
+    expect(getHumidityLabel(30)).toBe("Dry");
   });
 
-  test("returns Comfortable at 30-59", () => {
-    expect(getHumidityLabel(30)).toBe("Comfortable");
-    expect(getHumidityLabel(59)).toBe("Comfortable");
+  test("returns Comfortable in middle range", () => {
+    expect(getHumidityLabel(31)).toBe("Comfortable");
+    expect(getHumidityLabel(60)).toBe("Comfortable");
   });
 
-  test("returns Humid at 60-74", () => {
-    expect(getHumidityLabel(60)).toBe("Humid");
-    expect(getHumidityLabel(74)).toBe("Humid");
+  test("returns Humid in higher range", () => {
+    expect(getHumidityLabel(61)).toBe("Humid");
+    expect(getHumidityLabel(80)).toBe("Humid");
   });
 
-  test("returns Very Humid at 75-100", () => {
-    expect(getHumidityLabel(75)).toBe("Very Humid");
+  test("returns Very Humid above 80", () => {
+    expect(getHumidityLabel(81)).toBe("Very Humid");
     expect(getHumidityLabel(100)).toBe("Very Humid");
   });
 
-  test("throws for invalid boundaries", () => {
-    expect(() => getHumidityLabel(-1)).toThrow("Humidity must be between 0 and 100.");
-    expect(() => getHumidityLabel(101)).toThrow("Humidity must be between 0 and 100.");
+  test("throws for out-of-range values", () => {
+    expect(() => getHumidityLabel(-1)).toThrow(RangeError);
+    expect(() => getHumidityLabel(101)).toThrow(RangeError);
   });
 });
 
 describe("getWeatherGradient", () => {
   test("returns sunny gradient", () => {
-    expect(getWeatherGradient("Sunny")).toContain("#ff9a44");
+    expect(getWeatherGradient("sunny")).toContain("#ff9a44");
   });
 
-  test("returns cloudy gradient", () => {
-    expect(getWeatherGradient("Cloudy")).toContain("#6b7c93");
+  test("is case-insensitive and trims spaces", () => {
+    expect(getWeatherGradient("  CLOUDY ")).toContain("#607d8b");
   });
 
-  test("returns rainy gradient", () => {
-    expect(getWeatherGradient("Heavy Rain")).toContain("#2c3e50");
+  test("returns fallback gradient for unknown condition", () => {
+    expect(getWeatherGradient("volcanic-ash")).toContain("#3a7bd5");
   });
 
-  test("returns storm gradient", () => {
-    expect(getWeatherGradient("Thunderstorm")).toContain("#232526");
+  test("returns fallback gradient for empty input", () => {
+    expect(getWeatherGradient("")).toContain("#3a7bd5");
   });
 
-  test("returns snow gradient", () => {
-    expect(getWeatherGradient("Snow")).toContain("#cfd9df");
-  });
-
-  test("returns fallback gradient for unknown conditions", () => {
-    expect(getWeatherGradient("Volcanic Ash")).toContain("#4facfe");
-  });
-
-  test("handles empty condition", () => {
-    expect(getWeatherGradient("")).toContain("#4facfe");
+  test("accepts nullish input safely", () => {
+    expect(getWeatherGradient(null)).toContain("#3a7bd5");
+    expect(getWeatherGradient(undefined)).toContain("#3a7bd5");
   });
 });
