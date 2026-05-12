@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Card App</title>
+  <style>
+    :root {
+      --card-bg: rgba(255, 255, 255, 0.14);
+      --card-border: rgba(255, 255, 255, 0.35);
+      --text-main: #ffffff;
+      --text-soft: rgba(255, 255, 255, 0.84);
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text-main);
+      background: linear-gradient(135deg, #4f8cff, #6bdcff);
+      transition: background 700ms ease;
+      padding: 20px;
+    }
+
+    .weather-card {
+      width: min(100%, 420px);
+      border-radius: var(--radius);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .weather-card::before {
+      content: "";
+      position: absolute;
+      inset: -60px;
+      background: radial-gradient(circle at 15% 20%, rgba(255,255,255,0.22), transparent 50%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .location {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      margin: 0;
+    }
+
+    .datetime {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+    }
+
+    .toggle {
+      border: 1px solid rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 150ms ease, background 150ms ease;
+      white-space: nowrap;
+    }
+
+    .toggle:hover {
+      background: rgba(255,255,255,0.24);
+      transform: translateY(-1px);
+    }
+
+    .main {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .temp-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .temperature {
+      margin: 0;
+      font-size: clamp(2.4rem, 9vw, 4rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .temp-both {
+      font-size: 0.95rem;
+      color: var(--text-soft);
+      font-weight: 600;
+    }
+
+    .condition {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+
+    .icon {
+      font-size: clamp(3rem, 12vw, 4.4rem);
+      filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+    }
+
+    .stats {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.23);
+      border-radius: 14px;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .stat-label {
+      margin: 0 0 6px;
+      font-size: 0.76rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    @media (max-width: 390px) {
+      .weather-card {
+        padding: 16px;
+      }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .main {
+        grid-template-columns: 1fr;
+      }
+      .icon {
+        justify-self: start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="weather-card" role="region" aria-label="Current weather">
+    <section class="top">
+      <div>
+        <h1 class="location" id="locationName"></h1>
+        <div class="datetime" id="dateTime"></div>
+      </div>
+      <button class="toggle" id="unitToggle" type="button" aria-pressed="false">
+        Switch to °F
+      </button>
+    </section>
+
+    <section class="main">
+      <div class="temp-wrap">
+        <p class="temperature" id="temperature"></p>
+        <p class="temp-both" id="tempBoth"></p>
+        <p class="condition" id="conditionText"></p>
+      </div>
+      <div class="icon" id="weatherIcon" aria-label="Weather icon"></div>
+    </section>
+
+    <section class="stats">
+      <article class="stat">
+        <p class="stat-label">Feels Like</p>
+        <p class="stat-value" id="feelsLike"></p>
+      </article>
+      <article class="stat">
+        <p class="stat-label">Humidity</p>
+        <p class="stat-value" id="humidity"></p>
+      </article>
+      <article class="stat">
+        <p class="stat-label">Wind</p>
+        <p class="stat-value" id="windSpeed"></p>
+      </article>
+    </section>
+  </main>
+
+  <script src="utils.js"></script>
+  <script>
+    (function () {
+      const {
+        celsiusToFahrenheit,
+        formatWindSpeed,
+        getHumidityLabel,
+        getWeatherGradient
+      } = window.WeatherUtils;
+
+      const weatherData = {
+        location: "Bengaluru, IN",
+        condition: "Sunny",
+        temperatureC: 29,
+        feelsLikeC: 32,
+        humidity: 58,
+        windKmh: 14
+      };
+
+      const iconByCondition = {
+        sunny: "☀️",
+        clear: "🌤️",
+        cloudy: "☁️",
+        overcast: "☁️",
+        rainy: "🌧️",
+        drizzle: "🌦️",
+        storm: "⛈️",
+        snow: "❄️"
+      };
+
+      const ui = {
+        locationName: document.getElementById("locationName"),
+        dateTime: document.getElementById("dateTime"),
+        temperature: document.getElementById("temperature"),
+        tempBoth: document.getElementById("tempBoth"),
+        conditionText: document.getElementById("conditionText"),
+        weatherIcon: document.getElementById("weatherIcon"),
+        feelsLike: document.getElementById("feelsLike"),
+        humidity: document.getElementById("humidity"),
+        windSpeed: document.getElementById("windSpeed"),
+        unitToggle: document.getElementById("unitToggle")
+      };
+
+      let useFahrenheit = false;
+
+      function updateDateTime() {
+        const now = new Date();
+        ui.dateTime.textContent = now.toLocaleString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function displayTemp(celsius, isFahrenheit) {
+        return isFahrenheit
+          ? celsiusToFahrenheit(celsius) + "°F"
+          : celsius + "°C";
+      }
+
+      function render() {
+        const c = weatherData.temperatureC;
+        const f = celsiusToFahrenheit(c);
+        const feels = displayTemp(weatherData.feelsLikeC, useFahrenheit);
+
+        ui.locationName.textContent = weatherData.location;
+        ui.temperature.textContent = displayTemp(c, useFahrenheit);
+        ui.tempBoth.textContent = `${c}°C / ${f}°F`;
+        ui.conditionText.textContent = weatherData.condition;
+
+        const iconKey = weatherData.condition.trim().toLowerCase();
+        ui.weatherIcon.textContent = iconByCondition[iconKey] || "🌈";
+
+        ui.feelsLike.textContent = feels;
+        ui.humidity.textContent = `${weatherData.humidity}% • ${getHumidityLabel(weatherData.humidity)}`;
+        ui.windSpeed.textContent = formatWindSpeed(weatherData.windKmh);
+
+        document.body.style.background = getWeatherGradient(weatherData.condition);
+
+        ui.unitToggle.textContent = useFahrenheit ? "Switch to °C" : "Switch to °F";
+        ui.unitToggle.setAttribute("aria-pressed", String(useFahrenheit));
+      }
+
+      ui.unitToggle.addEventListener("click", function () {
+        useFahrenheit = !useFahrenheit;
+        render();
+      });
+
+      updateDateTime();
+      render();
+      setInterval(updateDateTime, 30000);
+    })();
+  </script>
+</body>
+</html>
