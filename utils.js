@@ -1,88 +1,66 @@
-(function (root) {
+(function (root, factory) {
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = factory();
+  } else {
+    root.WeatherUtils = factory();
+  }
+})(typeof self !== "undefined" ? self : this, function () {
+  function assertFiniteNumber(value, name) {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new TypeError(name + " must be a finite number");
+    }
+  }
+
   function celsiusToFahrenheit(c) {
-    return Math.round((Number(c) * 9) / 5 + 32);
+    assertFiniteNumber(c, "c");
+    return Math.round(c * 9 / 5 + 32);
   }
 
   function fahrenheitToCelsius(f) {
-    return Math.round(((Number(f) - 32) * 5) / 9);
+    assertFiniteNumber(f, "f");
+    return Math.trunc((f - 32) * 5 / 9);
   }
 
-  function formatWindSpeed(speedKmh, unit) {
-    const value = Number(speedKmh);
-    const normalizedUnit = unit || "km/h";
-
-    if (!Number.isFinite(value)) {
-      throw new Error("Wind speed must be a finite number.");
+  function formatWindSpeed(kmh) {
+    assertFiniteNumber(kmh, "kmh");
+    if (kmh < 0) {
+      throw new RangeError("kmh cannot be negative");
     }
-
-    if (normalizedUnit === "km/h") {
-      return Math.round(value) + " km/h";
-    }
-
-    if (normalizedUnit === "mph") {
-      const mph = Math.round(value * 0.621371 * 10) / 10;
-      return mph + " mph";
-    }
-
-    throw new Error("Unsupported wind speed unit.");
+    return Math.round(kmh) + " km/h";
   }
 
   function getHumidityLabel(humidity) {
-    const value = Number(humidity);
-
-    if (!Number.isFinite(value) || value < 0 || value > 100) {
-      throw new Error("Humidity must be between 0 and 100.");
+    assertFiniteNumber(humidity, "humidity");
+    if (humidity < 0 || humidity > 100) {
+      throw new RangeError("humidity must be between 0 and 100");
     }
-
-    if (value < 30) return "Dry";
-    if (value < 60) return "Comfortable";
-    if (value < 75) return "Humid";
+    if (humidity <= 30) return "Dry";
+    if (humidity <= 60) return "Comfortable";
+    if (humidity <= 80) return "Humid";
     return "Very Humid";
   }
 
   function getWeatherGradient(condition) {
-    const key = String(condition || "").toLowerCase();
-
-    if (key.includes("sun") || key.includes("clear")) {
-      return "linear-gradient(135deg, #ff9a44, #ffcc33 45%, #ffd86f)";
-    }
-
-    if (key.includes("cloud") || key.includes("overcast")) {
-      return "linear-gradient(135deg, #6b7c93, #8ea5bd 45%, #b4c4d6)";
-    }
-
-    if (key.includes("rain") || key.includes("drizzle")) {
-      return "linear-gradient(135deg, #2c3e50, #4b79a1 45%, #6dd5fa)";
-    }
-
-    if (key.includes("storm") || key.includes("thunder")) {
-      return "linear-gradient(135deg, #232526, #414345 45%, #5c6b73)";
-    }
-
-    if (key.includes("snow") || key.includes("sleet")) {
-      return "linear-gradient(135deg, #cfd9df, #e2ebf0 45%, #f6f9fc)";
-    }
-
-    return "linear-gradient(135deg, #4facfe, #00f2fe 45%, #43e97b)";
-  }
-
-  if (typeof module !== "undefined" && module.exports) {
-    module.exports = {
-      celsiusToFahrenheit,
-      fahrenheitToCelsius,
-      formatWindSpeed,
-      getHumidityLabel,
-      getWeatherGradient
+    var key = String(condition || "").trim().toLowerCase();
+    var gradients = {
+      sunny: "linear-gradient(135deg, #ff9a44 0%, #ffd15c 45%, #ffe8a3 100%)",
+      clear: "linear-gradient(135deg, #5b86e5 0%, #7f7fd5 45%, #91eae4 100%)",
+      cloudy: "linear-gradient(135deg, #607d8b 0%, #8aa3b4 45%, #d7dde8 100%)",
+      overcast: "linear-gradient(135deg, #4b5b6b 0%, #6f8194 45%, #a5b7c8 100%)",
+      rainy: "linear-gradient(135deg, #314755 0%, #4a6a82 45%, #6a8ca4 100%)",
+      drizzle: "linear-gradient(135deg, #4f6d7a 0%, #6b8a9b 45%, #95afbf 100%)",
+      storm: "linear-gradient(135deg, #232526 0%, #414345 45%, #6d7780 100%)",
+      snow: "linear-gradient(135deg, #83a4d4 0%, #b6fbff 45%, #e5f9ff 100%)"
     };
+
+    return gradients[key] || "linear-gradient(135deg, #3a7bd5 0%, #57c6e1 45%, #9be15d 100%)";
   }
 
-  if (typeof root !== "undefined") {
-    root.Utils = {
-      celsiusToFahrenheit,
-      fahrenheitToCelsius,
-      formatWindSpeed,
-      getHumidityLabel,
-      getWeatherGradient
-    };
-  }
-})(typeof globalThis !== "undefined" ? globalThis : this);
+  return {
+    celsiusToFahrenheit: celsiusToFahrenheit,
+    fahrenheitToCelsius: fahrenheitToCelsius,
+    formatWindSpeed: formatWindSpeed,
+    getHumidityLabel: getHumidityLabel,
+    getWeatherGradient: getWeatherGradient
+  };
+});
